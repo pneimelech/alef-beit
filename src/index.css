@@ -1,0 +1,30 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;800&family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700;900&display=swap');
+
+@theme {
+  --font-sans: "Assistant", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Frank Ruhl Libre", serif;
+}
+
+body {
+  @apply bg-amber-50;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom scrollbar for a cleaner look */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-amber-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-orange-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-orange-400;
+}
+
