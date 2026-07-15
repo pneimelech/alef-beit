@@ -5,12 +5,13 @@ import path from "path";
 async function startServer() {
   const app = express();
   const PORT = 3000;
+  const embedOrigin = process.env.EMBED_ORIGIN?.trim();
 
-  // הגדרות אבטחה שמאפשרות הטמעה ב-iframe בכל אתר
+  // Allow embedding only from this app or an explicitly configured parent site.
   app.use((req, res, next) => {
     res.removeHeader("X-Frame-Options");
-    res.setHeader("Content-Security-Policy", "frame-ancestors *;");
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Content-Security-Policy", `frame-ancestors 'self'${embedOrigin ? ` ${embedOrigin}` : ''};`);
+    if (embedOrigin) res.setHeader("Access-Control-Allow-Origin", embedOrigin);
     next();
   });
 

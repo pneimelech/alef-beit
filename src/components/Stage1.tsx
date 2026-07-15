@@ -6,6 +6,7 @@ import Card from "./Card";
 
 interface Stage1Props {
   onBack: () => void;
+  onComplete: () => void;
 }
 
 type Pronunciation = 'sephardi' | 'ashkenazi';
@@ -106,14 +107,14 @@ const ASHKENAZI_SPRITES: Record<string, { start: number, duration: number }> = {
 };
 
 const AUDIO_URLS = {
-  sephardi: "/sfard.mp3",
-  ashkenazi: "/ashkenaz.mp3"
+  sephardi: `${import.meta.env.BASE_URL}sfard.mp3`,
+  ashkenazi: `${import.meta.env.BASE_URL}ashkenaz.mp3`
 };
 
 // Create an ordered list of all items as they appear in the audio file for Ashkenazi fallback
 const ALL_ITEMS_ORDERED = [...LETTERS, ...FINAL_ROW_LETTERS, ...NIKUD];
 
-export default function Stage1({ onBack }: Stage1Props) {
+export default function Stage1({ onBack, onComplete }: Stage1Props) {
   const [pronunciation, setPronunciation] = useState<Pronunciation>('sephardi');
   const [audioReady, setAudioReady] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
@@ -281,7 +282,7 @@ export default function Stage1({ onBack }: Stage1Props) {
       <div className="flex flex-col md:flex-row items-center justify-between mb-2 gap-4">
         <h1 className="text-3xl md:text-5xl font-black text-orange-600">שָׁלָב 1: לוּחַ הַכָּרָה</h1>
         
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-3">
           <button 
             onClick={activateAudio}
             className={`px-4 py-2 rounded-xl font-bold shadow-lg transition-all ${audioReady ? 'bg-green-500 text-white' : 'bg-blue-500 text-white animate-pulse'}`}
@@ -473,6 +474,13 @@ export default function Stage1({ onBack }: Stage1Props) {
           </div>
         </div>
       </section>
+
+      <div className="mt-10 flex justify-center">
+        <button onClick={onComplete} className="flex items-center gap-3 bg-green-500 text-white px-9 py-4 rounded-2xl text-xl font-black shadow-lg hover:bg-green-600 active:translate-y-1 transition-all">
+          סיימתי להכיר · לשלב הצירופים
+          <ChevronLeft size={28} />
+        </button>
+      </div>
     </div>
   );
 }

@@ -12,6 +12,20 @@ import JewishBackground from './components/JewishBackground';
 
 export default function App() {
   const [currentStage, setCurrentStage] = useState<number | null>(null);
+  const [unlockedStage, setUnlockedStage] = useState(() => {
+    const saved = Number(window.localStorage.getItem('alef-beit-unlocked-stage') || 1);
+    return Math.min(Math.max(saved, 1), 3);
+  });
+
+  const completeStage = (stage: number) => {
+    const nextStage = Math.min(stage + 1, 3);
+    setUnlockedStage(previous => {
+      const next = Math.max(previous, nextStage);
+      window.localStorage.setItem('alef-beit-unlocked-stage', String(next));
+      return next;
+    });
+    setCurrentStage(nextStage);
+  };
 
   return (
     <div 
@@ -22,12 +36,12 @@ export default function App() {
 
       <main className="relative z-10 py-8">
         {!currentStage ? (
-          <MainMenu onSelectStage={(id) => setCurrentStage(id)} />
+          <MainMenu unlockedStage={unlockedStage} onSelectStage={(id) => setCurrentStage(id)} />
         ) : (
           currentStage === 1 ? (
-            <Stage1 onBack={() => setCurrentStage(null)} />
+            <Stage1 onBack={() => setCurrentStage(null)} onComplete={() => completeStage(1)} />
           ) : currentStage === 2 ? (
-            <Stage2 onBack={() => setCurrentStage(null)} />
+            <Stage2 onBack={() => setCurrentStage(null)} onComplete={() => completeStage(2)} />
           ) : currentStage === 3 ? (
             <Stage3 onBack={() => setCurrentStage(null)} />
           ) : (
