@@ -1,11 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, Home, Mic, CheckCircle2, XCircle, Loader2, MicOff } from 'lucide-react';
+import { Home, Mic, CheckCircle2, XCircle, Loader2, MicOff, Volume2 } from 'lucide-react';
 import { SIMPLE_WORDS, Word } from '../data';
 
 interface Stage3Props {
   onBack: () => void;
 }
+
+const normalizeHebrew = (value: string) => value
+  .normalize('NFD')
+  .replace(/[\u0591-\u05C7]/g, '')
+  .replace(/[^\u05D0-\u05EA]/g, '');
+
+const playFeedbackTone = (isCorrect: boolean) => {
+  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioContextClass) return;
+  const context = new AudioContextClass();
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.type = isCorrect ? 'sine' : 'triangle';
+  oscillator.frequency.setValueAtTime(isCorrect ? 523 : 260, context.currentTime);
+  oscillator.frequency.setValueAtTime(isCorrect ? 659 : 190, context.currentTime + 0.1);
+  gain.gain.setValueAtTime(0.08, context.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.3);
+  oscillator.start();
+  oscillator.stop(context.currentTime + 0.3);
+  oscillator.onended = () => context.close();
+};
+
+const speakWord = (word: Word) => {
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(word.nikudText);
+  utterance.lang = 'he-IL';
+  utterance.rate = 0.7;
+  window.speechSynthesis.speak(utterance);
+};
 
 const Stage3: React.FC<Stage3Props> = ({ onBack }) => {
   const [selectedWord, setSelectedWord] = useState<Word | null>(null);
@@ -15,7 +46,6 @@ const Stage3: React.FC<Stage3Props> = ({ onBack }) => {
   const [activeCategory, setActiveCategory] = useState<string>('קמץ-פתח');
   const [error, setError] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
-  const [pronunciation, setPronunciation] = useState<'sephardic' | 'ashkenazi'>('sephardic');
   
   const recognitionRef = useRef<any>(null);
   const selectedWordRef = useRef<Word | null>(null);
@@ -52,33 +82,9 @@ const Stage3: React.FC<Stage3Props> = ({ onBack }) => {
       
       const currentWord = selectedWordRef.current;
       if (currentWord) {
-        // Hebrew speech recognition can be tricky. 
-        // We normalize by removing non-Hebrew characters and checking for overlap.
-        const normalizedTranscript = transcript.replace(/[^\u0590-\u05FF]/g, '');
-        const normalizedTarget = currentWord.text.replace(/[^\u0590-\u05FF]/g, '');
-
-        // Basic match
-        let isCorrect = normalizedTranscript === normalizedTarget || 
-                         normalizedTranscript.includes(normalizedTarget) ||
-                         normalizedTarget.includes(normalizedTranscript);
-
-        // Phonetic flexibility for Ashkenazi/Sephardic variations
-        // For example: 'ת' (Tav) vs 'ס' (Samekh/Tav-soft), 'קמץ' (a) vs 'o'
-        if (!isCorrect) {
-          const fuzzyTranscript = normalizedTranscript
-            .replace(/ת/g, 'ס') // Tav soft sounds like Samekh
-            .replace(/ו/g, 'א') // Vov/O sounds like Aleph/A in some contexts
-            .replace(/ב/g, 'ו'); // Beis soft sounds like Vov
-          
-          const fuzzyTarget = normalizedTarget
-            .replace(/ת/g, 'ס')
-            .replace(/ו/g, 'א')
-            .replace(/ב/g, 'ו');
-
-          isCorrect = fuzzyTranscript === fuzzyTarget || 
-                      fuzzyTranscript.includes(fuzzyTarget) ||
-                      fuzzyTarget.includes(fuzzyTranscript);
-        }
+        const normalizedTranscript = normalizeHebrew(transcript);
+        const normalizedTarget = normalizeHebrew(currentWord.text);
+        const isCorrect = normalizedTranscript.length > 0 && normalizedTranscript === normalizedTarget;
         
         if (isCorrect) {
           setFeedback('correct');
@@ -88,31 +94,14 @@ const Stage3: React.FC<Stage3Props> = ({ onBack }) => {
           setAttempts(prev => {
             const newAttempts = prev + 1;
             if (newAttempts >= 3) {
-              // Play the word after 3 failures
-              let textToSpeak = currentWord.text;
-              
-              // Simple heuristic for Ashkenazi TTS simulation
-              if (pronunciation === 'ashkenazi') {
-                // Replace Kamatz (ָ) with Holam (וֹ) sounds for TTS nudge
-                // This is a very rough approximation as TTS engines are usually Sephardic
-                textToSpeak = textToSpeak.replace(/ָ/g, 'וֹ').replace(/ת/g, 'ס');
-              }
-              
-              const utterance = new SpeechSynthesisUtterance(textToSpeak);
-              utterance.lang = 'he-IL';
-              utterance.rate = 0.7;
-              window.speechSynthesis.speak(utterance);
+              speakWord(currentWord);
               return 0; // Reset after playing
             }
             return newAttempts;
           });
         }
         
-        const audio = new Audio(isCorrect 
-          ? 'https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3' 
-          : 'https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3'
-        );
-        audio.play().catch(() => {});
+        playFeedbackTone(isCorrect);
       }
     };
 
@@ -130,14 +119,7 @@ const Stage3: React.FC<Stage3Props> = ({ onBack }) => {
           if (newAttempts >= 3) {
             const currentWord = selectedWordRef.current;
             if (currentWord) {
-              let textToSpeak = currentWord.text;
-              if (pronunciation === 'ashkenazi') {
-                textToSpeak = textToSpeak.replace(/ָ/g, 'וֹ').replace(/ת/g, 'ס');
-              }
-              const utterance = new SpeechSynthesisUtterance(textToSpeak);
-              utterance.lang = 'he-IL';
-              utterance.rate = 0.7;
-              window.speechSynthesis.speak(utterance);
+              speakWord(currentWord);
             }
             return 0;
           }
@@ -217,22 +199,6 @@ const Stage3: React.FC<Stage3Props> = ({ onBack }) => {
             <Home size={20} className="text-orange-500" />
             <span>חזרה לתפריט</span>
           </button>
-          
-          {/* Pronunciation Toggle */}
-          <div className="flex bg-white p-1 rounded-xl border-2 border-orange-100 shadow-sm">
-            <button
-              onClick={() => setPronunciation('sephardic')}
-              className={`px-4 py-1.5 rounded-lg font-bold text-sm transition-all ${pronunciation === 'sephardic' ? 'bg-orange-500 text-white shadow-inner' : 'text-gray-500 hover:bg-orange-50'}`}
-            >
-              הגייה ספרדית
-            </button>
-            <button
-              onClick={() => setPronunciation('ashkenazi')}
-              className={`px-4 py-1.5 rounded-lg font-bold text-sm transition-all ${pronunciation === 'ashkenazi' ? 'bg-orange-500 text-white shadow-inner' : 'text-gray-500 hover:bg-orange-50'}`}
-            >
-              הגייה אשכנזית
-            </button>
-          </div>
         </div>
         
         <h1 className="text-3xl md:text-4xl font-black text-orange-600 drop-shadow-sm">קְרִיאַת מִילִּים פְּשׁוּטוֹת</h1>
@@ -307,6 +273,11 @@ const Stage3: React.FC<Stage3Props> = ({ onBack }) => {
               {selectedWord.nikudText}
             </div>
 
+            <button onClick={() => speakWord(selectedWord)} className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 transition-colors">
+              <Volume2 size={24} />
+              שמע את המילה והשווה לקריאה שלך
+            </button>
+
             <div className="flex flex-col items-center gap-4 w-full">
               {isSupported ? (
                 <div className="flex flex-col items-center gap-3">
@@ -332,7 +303,9 @@ const Stage3: React.FC<Stage3Props> = ({ onBack }) => {
                   )}
                 </div>
               ) : (
-                <div className="text-sm text-gray-400 font-bold">זיהוי דיבור לא נתמך בדפדפן זה</div>
+                <div className="text-center text-sm text-gray-500 font-bold bg-gray-50 px-5 py-3 rounded-xl">
+                  זיהוי דיבור אינו נתמך בדפדפן זה. קרא בקול והשתמש בכפתור השמע להשוואה.
+                </div>
               )}
             </div>
 

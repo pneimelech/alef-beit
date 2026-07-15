@@ -1,20 +1,22 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# אלף־בית: משחק לימוד קריאה
 
-# Run and deploy your AI Studio app
+מסלול מדורג לילדים ללימוד אותיות, ניקוד, צירופים ומילים, עם הקלטות בהגייה ספרדית ואשכנזית.
 
-This contains everything you need to run your app locally.
+## מסלול הלמידה
 
-View your app in AI Studio: https://ai.studio/apps/25beba6d-2212-40dd-9c02-7546e1a595ed
+1. לוח היכרות עם אותיות וסימני ניקוד.
+2. בניית צירופי אות וניקוד.
+3. קריאת מילים ובדיקת קריאה אופציונלית באמצעות המיקרופון.
 
-## Run Locally
+השלבים נפתחים בהדרגה וההתקדמות נשמרת בדפדפן. שלבים עתידיים מסומנים "בקרוב".
 
-**Prerequisites:**  Node.js
+## הרצה ובנייה
 
+```bash
+npm install
+npm run dev
+npm run lint
+npm run build
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+בפריסה באמצעות `server.ts`, ניתן להגדיר `EMBED_ORIGIN` לכתובת המדויקת של האתר שמורשה להטמיע את המשחק. זיהוי הדיבור הוא כלי עזר בלבד ואינו מחליף בדיקה של מבוגר.

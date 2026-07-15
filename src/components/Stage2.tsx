@@ -1,10 +1,11 @@
-import { ArrowRight, Languages, Volume2, VolumeX, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Volume2, VolumeX, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { LETTERS, FINAL_ROW_LETTERS, NIKUD, GameItem } from "../data";
 
 interface Stage2Props {
   onBack: () => void;
+  onComplete: () => void;
 }
 
 type Pronunciation = 'sephardi' | 'ashkenazi';
@@ -105,14 +106,14 @@ const ASHKENAZI_SPRITES: Record<string, { start: number, duration: number }> = {
 };
 
 const AUDIO_URLS = {
-  sephardi: "/sfard.mp3",
-  ashkenazi: "/ashkenaz.mp3"
+  sephardi: `${import.meta.env.BASE_URL}sfard.mp3`,
+  ashkenazi: `${import.meta.env.BASE_URL}ashkenaz.mp3`
 };
 
 // Filter out final letters for Stage 2
 const STAGE2_LETTERS = [...LETTERS, ...FINAL_ROW_LETTERS].filter(l => !l.id.endsWith('_s'));
 
-export default function Stage2({ onBack }: Stage2Props) {
+export default function Stage2({ onBack, onComplete }: Stage2Props) {
   const [pronunciation, setPronunciation] = useState<Pronunciation>('sephardi');
   const [selectedNikud, setSelectedNikud] = useState<GameItem>(NIKUD[0]); // Default to Kamatz
   const [sliderIndex, setSliderIndex] = useState(0);
@@ -272,15 +273,7 @@ export default function Stage2({ onBack }: Stage2Props) {
       <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
         <h1 className="text-3xl md:text-5xl font-black text-orange-600">שָׁלָב 2: צֵירוּפֵי אוֹתִיּוֹת</h1>
         
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setPronunciation(p => p === 'sephardi' ? 'ashkenazi' : 'sephardi')}
-            className="flex items-center gap-2 px-6 py-3 bg-[#FCECD5] rounded-2xl shadow-md hover:shadow-lg transition-all border-2 border-orange-100 font-bold text-gray-700"
-          >
-            <Languages size={20} className="text-orange-500" />
-            הגייה: {pronunciation === 'sephardi' ? 'ספרדית' : 'אשכנזית'}
-          </button>
-
+        <div className="flex flex-wrap items-center justify-center gap-3">
           <button 
             onClick={() => setIsMuted(!isMuted)}
             className="p-3 bg-[#FCECD5] rounded-2xl shadow-md hover:shadow-lg transition-all border-2 border-orange-100 text-gray-700"
@@ -516,6 +509,13 @@ export default function Stage2({ onBack }: Stage2Props) {
           })}
         </div>
       </section>
+
+      <div className="mt-10 flex justify-center">
+        <button onClick={onComplete} className="flex items-center gap-3 bg-green-500 text-white px-9 py-4 rounded-2xl text-xl font-black shadow-lg hover:bg-green-600 active:translate-y-1 transition-all">
+          סיימתי לתרגל · לקריאת מילים
+          <ChevronLeft size={28} />
+        </button>
+      </div>
     </div>
   );
 }

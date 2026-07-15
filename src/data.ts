@@ -60,11 +60,11 @@ export const NIKUD: GameItem[] = [
 ];
 
 export const STAGES = [
-  { id: 1, name: 'לוּחַ הַכָּרָה', locked: false },
-  { id: 2, name: 'צֵירוּפֵי אוֹתִיּוֹת', locked: true },
-  { id: 3, name: 'קְרִיאַת מִילִּים', locked: true },
-  { id: 4, name: 'מִשְׁפָּטִים קְצָרִים', locked: true },
-  { id: 5, name: 'קְרִיאָה שׁוֹטֶפֶת', locked: true }
+  { id: 1, name: 'לוּחַ הַכָּרָה', available: true },
+  { id: 2, name: 'צֵירוּפֵי אוֹתִיּוֹת', available: true },
+  { id: 3, name: 'קְרִיאַת מִילִּים', available: true },
+  { id: 4, name: 'מִשְׁפָּטִים קְצָרִים', available: false },
+  { id: 5, name: 'קְרִיאָה שׁוֹטֶפֶת', available: false }
 ];
 
 export interface Word {
